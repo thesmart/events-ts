@@ -18,9 +18,7 @@ jobs:
         with:
           deno-version: v2.6.x
           cache: true
-      - name: Check formatting
-        run: deno fmt --check
-      - name: Type checking
+      - name: Type & Format checking
         run: deno task lint
       - name: Check dependencies
         run: deno task deps

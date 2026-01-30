@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --allow-all
 
-import { $ } from 'zx';
+import { $ } from '@david/dax';
 import { checkCwd, findRootDir, parseArguments, resolvePath } from './src/common.ts';
 
 /**
