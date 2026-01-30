@@ -1,7 +1,14 @@
 #!/usr/bin/env -S deno run --allow-all
 
 import { $ } from '@david/dax';
-import { checkCwd, findRootDir, parseArguments, resolvePath } from './src/common.ts';
+import {
+  checkCwd,
+  findRootDir,
+  parseArguments,
+  relativePath,
+  resolvePath,
+  validateRepoDir,
+} from './src/common.ts';
 
 /**
  * Gate script for updating README badges.
@@ -56,6 +63,7 @@ OPTIONAL PARAMETERS:
   --license=<type>      License type (default: MIT)
 
 FLAGS:
+  --check              Verify badges are up to date (exits non-zero if not)
   --dryrun             Print URLs without downloading
   --help               Show this help message
 
@@ -77,6 +85,9 @@ EXAMPLES:
 
   # Failing tests with different coverage
   ./badges.ts --tests=failing --coverage=85
+
+  # Check if badges are up to date (for CI)
+  ./badges.ts --tests=passing --coverage=97 --check
 
 NOTES:
   - This script must be run from the ./gate folder.
@@ -129,7 +140,11 @@ async function validateParameters(
     }
   }
 
-  const outputDir = params.output ? resolvePath(params.output) : resolvePath('../static');
+  // Validate and resolve output directory
+  const outputDir = await validateRepoDir(
+    params.output || '../static',
+    { checkWritable: true },
+  );
 
   return {
     testsStatus: params.tests,
@@ -139,28 +154,6 @@ async function validateParameters(
     readmePath,
     thresholds,
   };
-}
-
-/**
- * Check if output directory is writable.
- */
-async function checkOutputDir(dir: string): Promise<void> {
-  try {
-    await Deno.mkdir(dir, { recursive: true });
-
-    const testFile = `${dir}/.write-test-${Date.now()}`;
-    try {
-      await Deno.writeTextFile(testFile, 'test');
-      await Deno.remove(testFile);
-    } catch {
-      throw new Error(`Output directory is not writable: ${dir}`);
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error(`Failed to access output directory: ${dir}`);
-  }
 }
 
 /**
@@ -269,11 +262,43 @@ async function downloadBadges(
 /**
  * Generate markdown for badge images with cache busting.
  */
-function generateBadgeMarkdown(badges: Record<string, Badge>): string {
+async function generateBadgeMarkdown(
+  badges: Record<string, Badge>,
+  outputDir: string,
+  readmePath: string,
+): Promise<string> {
+  // Validate output directory is readable
+  await validateRepoDir(outputDir, { checkReadable: true });
+
   const timestamp = Date.now();
-  return Object.values(badges)
-    .map((badge) => {
-      const imgPath = `./static/${badge.filename}?t=${timestamp}`;
+
+  // Compute relative path from README directory to output directory
+  const readmeDir = readmePath.substring(0, readmePath.lastIndexOf('/'));
+  const relPath = relativePath(readmeDir, outputDir);
+
+  // Validate badge files are readable
+  const entries = Object.entries(badges);
+  for (const [name, badge] of entries) {
+    const badgePath = `${outputDir}/${badge.filename}`;
+    try {
+      await Deno.stat(badgePath);
+    } catch (error) {
+      if (error instanceof Deno.errors.NotFound) {
+        throw new Error(
+          `Badge file not found: ${badgePath}\n` +
+            `Badge: ${name}`,
+        );
+      }
+      throw new Error(
+        `Cannot read badge file: ${badgePath}\n` +
+          `Badge: ${name}`,
+      );
+    }
+  }
+
+  return entries
+    .map(([_, badge]) => {
+      const imgPath = `${relPath}/${badge.filename}?t=${timestamp}`;
       return `[![${badge.alt}](${imgPath})](${badge.link})`;
     })
     .join('\n');
@@ -305,6 +330,48 @@ async function updateReadme(
 }
 
 /**
+ * Verify that existing badges match what would be generated.
+ * Returns true if all badges are up to date, false otherwise.
+ */
+async function verifyBadges(
+  badges: Record<string, Badge>,
+  outputDir: string,
+): Promise<boolean> {
+  console.log('Verifying badges are up to date...');
+  let allMatch = true;
+
+  for (const [name, badge] of Object.entries(badges)) {
+    const outputPath = `${outputDir}/${badge.filename}`;
+
+    // Check if badge file exists
+    try {
+      await Deno.stat(outputPath);
+    } catch {
+      console.error(`  ❌ ${name}: Badge file not found: ${outputPath}`);
+      allMatch = false;
+      continue;
+    }
+
+    // Download expected badge content to compare
+    const expectedContent = await (await fetch(badge.url)).text();
+
+    // Read existing badge content
+    const existingContent = await Deno.readTextFile(outputPath);
+
+    // Compare content
+    if (expectedContent !== existingContent) {
+      console.error(`  ❌ ${name}: Badge is out of date`);
+      console.error(`     Expected URL: ${badge.url}`);
+      allMatch = false;
+    } else {
+      console.log(`  ✅ ${name}: Up to date`);
+    }
+  }
+
+  return allMatch;
+}
+
+/**
  * Main execution function.
  */
 async function main(): Promise<void> {
@@ -322,11 +389,6 @@ async function main(): Promise<void> {
   // Validate and extract parameters
   const config = await validateParameters(params);
 
-  // Check output directory (skip in dryrun)
-  if (!flags.has('dryrun')) {
-    await checkOutputDir(config.outputDir);
-  }
-
   // Generate badge definitions
   const badges = generateBadges(config);
 
@@ -335,11 +397,28 @@ async function main(): Promise<void> {
     printDryRun(badges, config);
   }
 
+  // Handle check mode
+  if (flags.has('check')) {
+    const allMatch = await verifyBadges(badges, config.outputDir);
+    if (allMatch) {
+      console.log('\n✅ All badges are up to date!');
+      Deno.exit(0);
+    } else {
+      console.error('\n❌ Some badges are out of date!');
+      console.error('Run without --check to update them.');
+      Deno.exit(1);
+    }
+  }
+
   // Download badges
   await downloadBadges(badges, config.outputDir);
 
   // Generate and update README
-  const badgeMarkdown = generateBadgeMarkdown(badges);
+  const badgeMarkdown = await generateBadgeMarkdown(
+    badges,
+    config.outputDir,
+    config.readmePath,
+  );
   await updateReadme(badgeMarkdown, config.readmePath);
 
   // Success message
