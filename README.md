@@ -2,9 +2,9 @@
 
 <!-- BADGES:START -->
 
-[![Tests](./static/badge-tests.svg?t=1769762715301)](https://github.com/thesmart/events-ts)
-[![Test Coverage](./static/badge-coverage.svg?t=1769762715301)](https://github.com/thesmart/events-ts/.coverage/html/index.html)
-[![License](./static/badge-license.svg?t=1769762715301)](https://github.com/thesmart/events-ts/blob/main/LICENSE)
+[![Tests](./static/badge-tests.svg?t=1769763663050)](https://github.com/thesmart/events-ts)
+[![Test Coverage](./static/badge-coverage.svg?t=1769763663050)](https://github.com/thesmart/events-ts/.coverage/html/index.html)
+[![License](./static/badge-license.svg?t=1769763663050)](https://github.com/thesmart/events-ts/blob/main/LICENSE)
 
 <!-- BADGES:END -->
 

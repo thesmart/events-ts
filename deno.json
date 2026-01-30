@@ -9,7 +9,7 @@
   },
   "tasks": {
     "format": "deno fmt",
-    "lint": "deno check --all",
+    "lint": "deno check",
     "test": "deno test",
     "test-coverage": "deno test --coverage=.coverage",
     "coverage-report": "deno coverage .coverage --html",
@@ -17,6 +17,7 @@
     "badges": "cd gate && ./badges.ts --tests=passing --coverage=$(./coverage.ts) ; cd .."
   },
   "fmt": {
+    "exclude": ["**/*.svg"],
     "useTabs": false,
     "indentWidth": 2,
     "lineWidth": 100,
