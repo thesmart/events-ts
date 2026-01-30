@@ -33,7 +33,7 @@ jobs:
         id: coverage
         continue-on-error: true
         working-directory: gate
-        run: deno task --quiet coverage-check > "$GITHUB_OUTPUT"
+        run: deno task --quiet coverage-check >> "$GITHUB_OUTPUT"
       - name: Update and commit badges
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
@@ -50,4 +50,4 @@ jobs:
           fi
 
           # Run the update script
-          ./scripts/update-badges.sh "$TEST_STATUS" "${{ steps.coverage.outputs.percentage }}"
+          ./scripts/update-badges.sh "$TEST_STATUS" "${{ steps.coverage.outputs.coverage }}"

@@ -14,7 +14,7 @@ import { checkCwd, findRootDir, parseArguments, resolvePath } from './src/common
  *   ./coverage.ts --min=80
  *
  * Output:
- *   97%
+ *   coverage=97
  *
  * @throws Error if coverage report cannot be read or parsed
  */
@@ -61,9 +61,9 @@ EXAMPLES:
   ./coverage.ts --require-yellow && echo "Coverage passed!"
 
 OUTPUT:
-  Prints the coverage percentage as a rounded integer with %, e.g.: 97%
-  Exits with code 0 if coverage meets threshold (or no threshold set)
-  Exits with code 1 if coverage is below threshold
+  Prints "coverage=\${percentage}" where percentage is a rounded integer.
+  Exits with code 0 if coverage meets threshold (or no threshold set).
+  Exits with code 1 if coverage is below threshold.
 
 NOTES:
   - This script must be run from the ./gate folder.
@@ -176,7 +176,7 @@ async function main(): Promise<void> {
 
   // Round to integer and output
   const roundedCoverage = Math.round(coverage);
-  console.log(`${roundedCoverage}`);
+  console.log(`coverage=${roundedCoverage}`);
 
   // Check threshold requirements
   let minRequired: number | null = null;
