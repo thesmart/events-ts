@@ -1,0 +1,21 @@
+{
+  "name": "event-ts-gates",
+  "exports": "./badges.ts",
+  "tasks": {
+    "badges": "deno run --allow-all badges.ts",
+    "coverage": "deno run --allow-all coverage.ts",
+    "deps": "deno run --allow-all deps.ts"
+  },
+  "imports": {
+    "@std/path": "jsr:@std/path@^1.1.4",
+    "zx": "npm:zx@^8.2.4"
+  },
+  "fmt": {
+    "useTabs": false,
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "semiColons": true,
+    "singleQuote": true,
+    "proseWrap": "always"
+  }
+}

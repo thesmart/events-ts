@@ -1,6 +1,33 @@
 {
+  "name": "events-ts",
+  "exports": "./src/event-target.ts",
+  "coverage": {
+    "thresholds": {
+      "green": 95,
+      "yellow": 80
+    }
+  },
   "tasks": {
-    "test": "deno test"
+    "format": "deno fmt",
+    "lint": "deno check --all",
+    "test": "deno test",
+    "test-coverage": "deno test --coverage=.coverage",
+    "coverage-report": "deno coverage .coverage --html",
+    "deps": "cd gate && ./deps.ts ; cd ..",
+    "badges": "cd gate && ./badges.ts --tests=passing --coverage=$(./coverage.ts) ; cd .."
+  },
+  "fmt": {
+    "useTabs": false,
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "semiColons": true,
+    "singleQuote": true,
+    "proseWrap": "always"
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.17",

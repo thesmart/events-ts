@@ -1,72 +1,72 @@
-import { assert, assertEquals, assertMatch, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
-import { ErrorEvent, Event, EventTarget } from "./event-target.ts";
+import { assert, assertEquals, assertMatch, assertThrows } from '@std/assert';
+import { describe, it } from '@std/testing/bdd';
+import { ErrorEvent, Event, EventTarget } from './event-target.ts';
 
 // Test event types
 interface FooEvent extends Event {
-  type: "foo";
+  type: 'foo';
   payload: number;
 }
 
 interface BarEvent extends Event {
-  type: "bar";
+  type: 'bar';
   data: string;
 }
 
 interface BazEvent extends Event {
-  type: "baz";
+  type: 'baz';
 }
 
 type TestEvent = FooEvent | BarEvent | BazEvent;
 
-describe("EventTarget", () => {
-  describe("addEventListener", () => {
-    it("should add a listener for an event type", () => {
+describe('EventTarget', () => {
+  describe('addEventListener', () => {
+    it('should add a listener for an event type', () => {
       const target = new EventTarget<TestEvent>();
       const listener = () => {};
 
-      target.addEventListener("foo", listener);
+      target.addEventListener('foo', listener);
 
       assertEquals(target.listenerCount(), 1);
       console.info(target.eventNames());
-      assertEquals(Array.from(target.eventNames()), ["foo"]);
+      assertEquals(Array.from(target.eventNames()), ['foo']);
     });
 
-    it("should add multiple listeners for the same event type", () => {
+    it('should add multiple listeners for the same event type', () => {
       const target = new EventTarget<TestEvent>();
       const listener1 = () => {};
       const listener2 = () => {};
 
-      target.addEventListener("foo", listener1);
-      target.addEventListener("foo", listener2);
-      target.addEventListener("foo", listener2);
+      target.addEventListener('foo', listener1);
+      target.addEventListener('foo', listener2);
+      target.addEventListener('foo', listener2);
 
       assertEquals(target.listenerCount(), 2);
     });
 
-    it("should add listeners for different event types", () => {
+    it('should add listeners for different event types', () => {
       const target = new EventTarget<TestEvent>();
       const fooListener = () => {};
       const barListener = () => {};
 
-      target.addEventListener("foo", fooListener);
-      target.addEventListener("bar", barListener);
+      target.addEventListener('foo', fooListener);
+      target.addEventListener('bar', barListener);
 
       assertEquals(target.listenerCount(), 2);
-      assertEquals(Array.from(target.eventNames()), ["foo", "bar"]);
+      assertEquals(Array.from(target.eventNames()), ['foo', 'bar']);
     });
 
-    it("should not add duplicate listeners", () => {
+    it('should not add duplicate listeners', () => {
       const target = new EventTarget<TestEvent>();
       const listener = () => {};
 
-      target.addEventListener("foo", listener);
-      target.addEventListener("foo", listener);
+      target.addEventListener('foo', listener);
+      target.addEventListener('foo', listener);
 
       assertEquals(target.listenerCount(), 1);
     });
 
-    it("should add once listener that removes itself after firing", () => {
+    it('should add once listener that removes itself after firing', () => {
       const target = new EventTarget<TestEvent>();
       let callCount = 0;
       let seenPayload = 0;
@@ -75,84 +75,84 @@ describe("EventTarget", () => {
         seenPayload = event.payload;
       };
 
-      target.addEventListener("foo", listener, true);
+      target.addEventListener('foo', listener, true);
       assertEquals(target.listenerCount(), 1);
 
-      target.dispatchEvent({ type: "foo", payload: 42, timeStamp: Date.now() });
+      target.dispatchEvent({ type: 'foo', payload: 42, timeStamp: Date.now() });
 
       assertEquals(callCount, 1);
       assertEquals(seenPayload, 42);
       assertEquals(target.listenerCount(), 0);
     });
 
-    it("should throw when called with fewer than 2 arguments", () => {
+    it('should throw when called with fewer than 2 arguments', () => {
       const target = new EventTarget<TestEvent>();
 
       assertThrows(() => {
         // @ts-expect-error Testing invalid call
-        target.addEventListener("foo");
+        target.addEventListener('foo');
       });
     });
   });
 
-  describe("removeEventListener", () => {
-    it("should remove a specific listener", () => {
+  describe('removeEventListener', () => {
+    it('should remove a specific listener', () => {
       const target = new EventTarget<TestEvent>();
       const listener = () => {};
 
-      target.addEventListener("foo", listener);
+      target.addEventListener('foo', listener);
       assertEquals(target.listenerCount(), 1);
 
-      target.removeEventListener("foo", listener);
+      target.removeEventListener('foo', listener);
       assertEquals(target.listenerCount(), 0);
     });
 
-    it("should not affect other event types", () => {
+    it('should not affect other event types', () => {
       const target = new EventTarget<TestEvent>();
       const fooListener = () => {};
       const barListener = () => {};
 
-      target.addEventListener("foo", fooListener);
-      target.addEventListener("bar", barListener);
+      target.addEventListener('foo', fooListener);
+      target.addEventListener('bar', barListener);
 
-      target.removeEventListener("foo", fooListener);
+      target.removeEventListener('foo', fooListener);
 
       assertEquals(target.listenerCount(), 1);
-      assertEquals(Array.from(target.eventNames()), ["bar"]);
+      assertEquals(Array.from(target.eventNames()), ['bar']);
     });
 
-    it("should handle removing non-existent listener gracefully", () => {
+    it('should handle removing non-existent listener gracefully', () => {
       const target = new EventTarget<TestEvent>();
       const listener = () => {};
 
-      target.removeEventListener("foo", listener);
+      target.removeEventListener('foo', listener);
 
       assertEquals(target.listenerCount(), 0);
     });
   });
 
-  describe("removeAllListeners", () => {
-    it("should remove all listeners for a specific type", () => {
+  describe('removeAllListeners', () => {
+    it('should remove all listeners for a specific type', () => {
       const target = new EventTarget<TestEvent>();
 
-      target.addEventListener("foo", () => {});
-      target.addEventListener("bar", () => {});
-      target.addEventListener("foo", () => {});
-      target.addEventListener("baz", () => {});
-      target.addEventListener("foo", () => {});
+      target.addEventListener('foo', () => {});
+      target.addEventListener('bar', () => {});
+      target.addEventListener('foo', () => {});
+      target.addEventListener('baz', () => {});
+      target.addEventListener('foo', () => {});
 
-      target.removeAllListeners("foo");
+      target.removeAllListeners('foo');
 
       assertEquals(target.listenerCount(), 2);
-      assertEquals(Array.from(target.eventNames()), ["bar", "baz"]);
+      assertEquals(Array.from(target.eventNames()), ['bar', 'baz']);
     });
 
-    it("should remove all listeners for all types when no type provided", () => {
+    it('should remove all listeners for all types when no type provided', () => {
       const target = new EventTarget<TestEvent>();
 
-      target.addEventListener("foo", () => {});
-      target.addEventListener("bar", () => {});
-      target.addEventListener("baz", () => {});
+      target.addEventListener('foo', () => {});
+      target.addEventListener('bar', () => {});
+      target.addEventListener('baz', () => {});
 
       assertEquals(target.listenerCount(), 3);
 
@@ -162,28 +162,28 @@ describe("EventTarget", () => {
       assertEquals(Array.from(target.eventNames()), []);
     });
 
-    it("should handle removing listeners for non-existent type gracefully", () => {
+    it('should handle removing listeners for non-existent type gracefully', () => {
       const target = new EventTarget<TestEvent>();
 
-      target.removeAllListeners("foo");
+      target.removeAllListeners('foo');
 
       assertEquals(target.listenerCount(), 0);
     });
   });
 
-  describe("dispatchEvent", () => {
-    it("should call listener when event is dispatched", () => {
+  describe('dispatchEvent', () => {
+    it('should call listener when event is dispatched', () => {
       const target = new EventTarget<TestEvent>();
       let called = false;
       let receivedEvent: FooEvent | null = null;
 
-      target.addEventListener("foo", (event) => {
+      target.addEventListener('foo', (event) => {
         called = true;
         receivedEvent = event;
       });
 
       const event: FooEvent = {
-        type: "foo",
+        type: 'foo',
         payload: 42,
         timeStamp: Date.now(),
       };
@@ -193,75 +193,75 @@ describe("EventTarget", () => {
       assertEquals(receivedEvent, event);
     });
 
-    it("should call multiple listeners in order", () => {
+    it('should call multiple listeners in order', () => {
       const target = new EventTarget<TestEvent>();
       const callOrder: number[] = [];
 
-      target.addEventListener("foo", () => callOrder.push(1));
-      target.addEventListener("foo", () => callOrder.push(2));
-      target.addEventListener("foo", () => callOrder.push(3));
+      target.addEventListener('foo', () => callOrder.push(1));
+      target.addEventListener('foo', () => callOrder.push(2));
+      target.addEventListener('foo', () => callOrder.push(3));
 
-      target.dispatchEvent({ type: "foo", payload: 42, timeStamp: Date.now() });
+      target.dispatchEvent({ type: 'foo', payload: 42, timeStamp: Date.now() });
 
       assertEquals(callOrder, [1, 2, 3]);
     });
 
-    it("should not call listeners for different event types", () => {
+    it('should not call listeners for different event types', () => {
       const target = new EventTarget<TestEvent>();
       let fooCalled = false;
       let barCalled = false;
 
-      target.addEventListener("foo", () => {
+      target.addEventListener('foo', () => {
         fooCalled = true;
       });
-      target.addEventListener("bar", () => {
+      target.addEventListener('bar', () => {
         barCalled = true;
       });
 
-      target.dispatchEvent({ type: "foo", payload: 42, timeStamp: Date.now() });
+      target.dispatchEvent({ type: 'foo', payload: 42, timeStamp: Date.now() });
 
       assertEquals(fooCalled, true);
       assertEquals(barCalled, false);
     });
 
-    it("should handle errors thrown in listeners", () => {
+    it('should handle errors thrown in listeners', () => {
       const target = new EventTarget<TestEvent>();
       let errorEvent: ErrorEvent | null = null;
 
-      target.addEventListener("error", (event) => {
+      target.addEventListener('error', (event) => {
         errorEvent = event;
-        assertEquals(errorEvent.type, "error");
-        assertEquals((errorEvent.error as Error).message, "Test error");
+        assertEquals(errorEvent.type, 'error');
+        assertEquals((errorEvent.error as Error).message, 'Test error');
       });
 
-      target.addEventListener("foo", () => {
-        throw new Error("Test error");
+      target.addEventListener('foo', () => {
+        throw new Error('Test error');
       });
 
-      target.dispatchEvent({ type: "foo", payload: 42, timeStamp: Date.now() });
+      target.dispatchEvent({ type: 'foo', payload: 42, timeStamp: Date.now() });
 
       assert(errorEvent);
     });
 
-    it("should do nothing when no listeners registered", () => {
+    it('should do nothing when no listeners registered', () => {
       const target = new EventTarget<TestEvent>();
 
-      target.dispatchEvent({ type: "foo", payload: 42, timeStamp: Date.now() });
+      target.dispatchEvent({ type: 'foo', payload: 42, timeStamp: Date.now() });
 
       assertEquals(target.listenerCount(), 0);
     });
   });
 
-  describe("dispatchError", () => {
-    it("should dispatch error to error listeners", () => {
+  describe('dispatchError', () => {
+    it('should dispatch error to error listeners', () => {
       const target = new EventTarget<TestEvent>();
-      const testError = new Error("Test error");
+      const testError = new Error('Test error');
 
       let errorEvent: ErrorEvent | null = null;
-      target.addEventListener("error", (event) => {
+      target.addEventListener('error', (event) => {
         errorEvent = event;
-        assertEquals("Test error", (event?.error as Error).message);
-        assertEquals(errorEvent.type, "error");
+        assertEquals('Test error', (event?.error as Error).message);
+        assertEquals(errorEvent.type, 'error');
         assertEquals(errorEvent.error, testError);
       });
 
@@ -269,17 +269,17 @@ describe("EventTarget", () => {
       assert(errorEvent);
     });
 
-    it("should throw on next tick when no error listeners", async () => {
+    it('should throw on next tick when no error listeners', async () => {
       const target = new EventTarget<TestEvent>();
 
       // Listen for unhandled rejections (since nextTick throws asynchronously)
       let uncaughtErrorMessage: string | null = null;
-      globalThis.addEventListener("error", (event) => {
+      globalThis.addEventListener('error', (event) => {
         event.preventDefault(); // prevent test from crashing
         uncaughtErrorMessage = event.message;
       });
 
-      target.dispatchError(new Error("Hello World"));
+      target.dispatchError(new Error('Hello World'));
 
       // Allow next tick to execute
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -288,20 +288,20 @@ describe("EventTarget", () => {
       assertMatch(uncaughtErrorMessage, /Hello World/);
     });
 
-    it("should not throw when error listener throws", async () => {
+    it('should not throw when error listener throws', async () => {
       const target = new EventTarget<TestEvent>();
-      target.addEventListener("error", () => {
-        throw new Error("Goodnight moon");
+      target.addEventListener('error', () => {
+        throw new Error('Goodnight moon');
       });
 
       // Listen for unhandled rejections (since nextTick throws asynchronously)
       let uncaughtErrorMessage: string | null = null;
-      globalThis.addEventListener("error", (event) => {
+      globalThis.addEventListener('error', (event) => {
         event.preventDefault(); // prevent test from crashing
         uncaughtErrorMessage = event.message;
       });
 
-      target.dispatchError(new Error("Hello World"));
+      target.dispatchError(new Error('Hello World'));
 
       // Allow next tick to execute
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -311,142 +311,272 @@ describe("EventTarget", () => {
     });
   });
 
-  describe("eventNames", () => {
-    it("should return empty array when no listeners", () => {
+  describe('eventNames', () => {
+    it('should return empty array when no listeners', () => {
       const target = new EventTarget<TestEvent>();
 
       assertEquals(Array.from(target.eventNames()), []);
     });
 
-    it("should return array of event type names", () => {
+    it('should return array of event type names', () => {
       const target = new EventTarget<TestEvent>();
 
-      target.addEventListener("foo", () => {});
-      target.addEventListener("bar", () => {});
+      target.addEventListener('foo', () => {});
+      target.addEventListener('bar', () => {});
 
-      assertEquals(Array.from(target.eventNames()), ["foo", "bar"]);
+      assertEquals(Array.from(target.eventNames()), ['foo', 'bar']);
     });
 
-    it("should not include duplicates", () => {
+    it('should not include duplicates', () => {
       const target = new EventTarget<TestEvent>();
 
-      target.addEventListener("foo", () => {});
-      target.addEventListener("foo", () => {});
+      target.addEventListener('foo', () => {});
+      target.addEventListener('foo', () => {});
 
-      assertEquals(Array.from(target.eventNames()), ["foo"]);
+      assertEquals(Array.from(target.eventNames()), ['foo']);
     });
   });
 
-  describe("listenerCount", () => {
-    it("should return 0 when no listeners", () => {
+  describe('listenerCount', () => {
+    it('should return 0 when no listeners', () => {
       const target = new EventTarget<TestEvent>();
 
       assertEquals(target.listenerCount(), 0);
     });
 
-    it("should return total count of all listeners", () => {
+    it('should return total count of all listeners', () => {
       const target = new EventTarget<TestEvent>();
 
-      target.addEventListener("foo", () => {});
-      target.addEventListener("foo", () => {});
-      target.addEventListener("bar", () => {});
+      target.addEventListener('foo', () => {});
+      target.addEventListener('foo', () => {});
+      target.addEventListener('bar', () => {});
 
       assertEquals(target.listenerCount(), 3);
     });
 
-    it("should decrease when listeners are removed", () => {
+    it('should decrease when listeners are removed', () => {
       const target = new EventTarget<TestEvent>();
       const listener = () => {};
 
-      target.addEventListener("foo", listener);
+      target.addEventListener('foo', listener);
       assertEquals(target.listenerCount(), 1);
 
-      target.removeEventListener("foo", listener);
+      target.removeEventListener('foo', listener);
       assertEquals(target.listenerCount(), 0);
     });
   });
 
-  describe("once listener behavior", () => {
-    it("should handle multiple once listeners for same event", () => {
+  describe('once listener behavior', () => {
+    it('should handle multiple once listeners for same event', () => {
       const target = new EventTarget<TestEvent>();
       let count1 = 0;
       let count2 = 0;
 
-      target.addEventListener("foo", () => count1++, true);
-      target.addEventListener("foo", () => count2++, true);
+      target.addEventListener('foo', () => count1++, true);
+      target.addEventListener('foo', () => count2++, true);
 
-      target.dispatchEvent({ type: "foo", payload: 42, timeStamp: Date.now() });
-      target.dispatchEvent({ type: "foo", payload: 99, timeStamp: Date.now() });
+      target.dispatchEvent({ type: 'foo', payload: 42, timeStamp: Date.now() });
+      target.dispatchEvent({ type: 'foo', payload: 99, timeStamp: Date.now() });
 
       assertEquals(count1, 1);
       assertEquals(count2, 1);
       assertEquals(target.listenerCount(), 0);
     });
 
-    it("should allow manual removal of once listener before it fires", () => {
+    it('should allow manual removal of once listener before it fires', () => {
       const target = new EventTarget<TestEvent>();
       let callCount = 0;
       const listener = () => callCount++;
 
-      target.addEventListener("foo", listener, true);
-      target.removeEventListener("foo", listener);
+      target.addEventListener('foo', listener, true);
+      target.removeEventListener('foo', listener);
 
-      target.dispatchEvent({ type: "foo", payload: 42, timeStamp: Date.now() });
+      target.dispatchEvent({ type: 'foo', payload: 42, timeStamp: Date.now() });
 
       assertEquals(callCount, 0);
     });
   });
 
-  describe("on", () => {
-    it("should add a listener and call it when event is dispatched", () => {
+  describe('on', () => {
+    it('should add a listener and call it when event is dispatched', () => {
       const target = new EventTarget<TestEvent>();
       let called = false;
       let receivedPayload = 0;
 
-      target.on("foo", (event) => {
+      target.on('foo', (event) => {
         called = true;
         receivedPayload = event.payload;
       });
 
-      target.dispatchEvent({ type: "foo", payload: 42, timeStamp: Date.now() });
+      target.dispatchEvent({ type: 'foo', payload: 42, timeStamp: Date.now() });
 
       assertEquals(called, true);
       assertEquals(receivedPayload, 42);
     });
   });
 
-  describe("once", () => {
-    it("should add a one-time listener that removes itself after firing", () => {
+  describe('once', () => {
+    it('should add a one-time listener that removes itself after firing', () => {
       const target = new EventTarget<TestEvent>();
       let callCount = 0;
 
-      target.once("foo", () => {
+      target.once('foo', () => {
         callCount++;
       });
 
-      target.dispatchEvent({ type: "foo", payload: 42, timeStamp: Date.now() });
-      target.dispatchEvent({ type: "foo", payload: 99, timeStamp: Date.now() });
+      target.dispatchEvent({ type: 'foo', payload: 42, timeStamp: Date.now() });
+      target.dispatchEvent({ type: 'foo', payload: 99, timeStamp: Date.now() });
 
       assertEquals(callCount, 1);
       assertEquals(target.listenerCount(), 0);
     });
   });
 
-  describe("off", () => {
-    it("should remove a listener", () => {
+  describe('off', () => {
+    it('should remove a listener', () => {
       const target = new EventTarget<TestEvent>();
       let callCount = 0;
       const listener = () => {
         callCount++;
       };
 
-      target.on("foo", listener);
-      target.off("foo", listener);
+      target.on('foo', listener);
+      target.off('foo', listener);
 
-      target.dispatchEvent({ type: "foo", payload: 42, timeStamp: Date.now() });
+      target.dispatchEvent({ type: 'foo', payload: 42, timeStamp: Date.now() });
 
       assertEquals(callCount, 0);
       assertEquals(target.listenerCount(), 0);
+    });
+  });
+
+  describe('argument type checking', () => {
+    it('should throw TypeError when addEventListener type is not a string', () => {
+      const target = new EventTarget<TestEvent>();
+
+      assertThrows(
+        () => {
+          // @ts-expect-error Testing invalid type
+          target.addEventListener(123, () => {});
+        },
+        TypeError,
+        'Event type must be a string',
+      );
+    });
+
+    it('should throw TypeError when addEventListener listener is not a function', () => {
+      const target = new EventTarget<TestEvent>();
+
+      assertThrows(
+        () => {
+          // @ts-expect-error Testing invalid listener
+          target.addEventListener('foo', 'not a function');
+        },
+        TypeError,
+        'Event listener must be a function',
+      );
+    });
+
+    it('should throw TypeError when removeEventListener type is not a string', () => {
+      const target = new EventTarget<TestEvent>();
+
+      assertThrows(
+        () => {
+          // @ts-expect-error Testing invalid type
+          target.removeEventListener(123, () => {});
+        },
+        TypeError,
+        'Event type must be a string',
+      );
+    });
+
+    it('should throw TypeError when removeEventListener listener is not a function', () => {
+      const target = new EventTarget<TestEvent>();
+
+      assertThrows(
+        () => {
+          // @ts-expect-error Testing invalid listener
+          target.removeEventListener('foo', 'not a function');
+        },
+        TypeError,
+        'Event listener must be a function',
+      );
+    });
+
+    it('should throw TypeError when removeAllListeners type is not a string', () => {
+      const target = new EventTarget<TestEvent>();
+
+      assertThrows(
+        () => {
+          // @ts-expect-error Testing invalid type
+          target.removeAllListeners(123);
+        },
+        TypeError,
+        'Event type must be a string',
+      );
+    });
+
+    it('should throw TypeError when dispatchEvent event is not an object', () => {
+      const target = new EventTarget<TestEvent>();
+
+      assertThrows(
+        () => {
+          // @ts-expect-error Testing invalid event
+          target.dispatchEvent('not an object');
+        },
+        TypeError,
+        'Event must be an object with a string `type` property',
+      );
+    });
+
+    it('should throw TypeError when dispatchEvent event is null', () => {
+      const target = new EventTarget<TestEvent>();
+
+      assertThrows(
+        () => {
+          // @ts-expect-error Testing invalid event
+          target.dispatchEvent(null);
+        },
+        TypeError,
+        'Event must be an object with a string `type` property',
+      );
+    });
+
+    it('should throw TypeError when dispatchEvent event.type is not a string', () => {
+      const target = new EventTarget<TestEvent>();
+
+      assertThrows(
+        () => {
+          // @ts-expect-error Testing invalid event type
+          target.dispatchEvent({ type: 123, timeStamp: Date.now() });
+        },
+        TypeError,
+        'Event must be an object with a string `type` property',
+      );
+    });
+
+    it('should throw TypeError when dispatchError error is null', () => {
+      const target = new EventTarget<TestEvent>();
+
+      assertThrows(
+        () => {
+          target.dispatchError(null);
+        },
+        TypeError,
+        'Error must not be null or undefined',
+      );
+    });
+
+    it('should throw TypeError when dispatchError error is undefined', () => {
+      const target = new EventTarget<TestEvent>();
+
+      assertThrows(
+        () => {
+          target.dispatchError(undefined);
+        },
+        TypeError,
+        'Error must not be null or undefined',
+      );
     });
   });
 });
