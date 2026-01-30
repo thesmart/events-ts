@@ -29,11 +29,10 @@ jobs:
       - name: Generate coverage report
         continue-on-error: true
         run: deno task --quiet coverage-report
-      - name: Check coverage requirements
+      - name: Require test coverage
         id: coverage
         continue-on-error: true
-        working-directory: gate
-        run: deno task --quiet coverage-check >> "$GITHUB_OUTPUT"
+        run: deno task --quiet coverage-check 1> $GITHUB_OUTPUT
       - name: Update and commit badges
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
