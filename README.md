@@ -2,9 +2,8 @@
 
 <!-- BADGES:START -->
 
-[![Tests](static/badge-tests.svg?t=1769802883551)](https://github.com/thesmart/events-ts)
-[![Test Coverage](static/badge-coverage.svg?t=1769802883551)](https://github.com/thesmart/events-ts/.coverage/html/index.html)
-[![License](static/badge-license.svg?t=1769802883551)](https://github.com/thesmart/events-ts/blob/main/LICENSE)
+[![Tests: passing](static/badge-tests.svg)](https://github.com/thesmart/events-ts/actions/workflows/gate.yml)
+![Coverage: 80](static/badge-coverage.svg) [![License: MIT](static/badge-license.svg)](LICENSE)
 
 <!-- BADGES:END -->
 

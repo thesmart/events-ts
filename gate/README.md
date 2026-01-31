@@ -33,15 +33,9 @@ Each gate script should:
 - Exit with code 0 on success, non-zero on failure
 - Provide clear error messages
 - Not modify files unless explicitly intended
-- Use the `zx` library for shell operations
-- Use shared utilities from `src/*.ts`
-- Validate that it's running from the gate folder via `checkCwd()`
-- Resolve all file path parameters using `resolvePath()`
+- Use the `@david/dax` library for shell operations
+- Use shared utilities from `src/common.ts`, whenever possible
 - Include comprehensive help text via `--help` flag
-
-The `src/common.ts` file provides shared utilities for all gate scripts:
-
-- `checkCwd()` - Ensures the script is running from the gate folder
-- `findRootDir()` - Finds the root directory by locating `deno.json` with `name: "events-ts"`
-- `parseArguments()` - Parses command-line arguments into params and flags
-- `resolvePath()` - Resolves relative paths to absolute paths using `@std/path`
+- Use `gate` configuration in repo's `deno.json` for configuration / defaults
+- Validate all path parameters for safety
+- Assume path parameters are relative to CWD, but repo configuration is relative to repo root

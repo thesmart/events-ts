@@ -1,4 +1,4 @@
-# Repository Agent Instructions
+# Agent Instructions for Repository
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository. Consult the [README.md](./README.md) file for project specification.

@@ -2,20 +2,13 @@
   "name": "events-ts",
   "exports": "./src/event-target.ts",
   "exclude": ["gate/**"],
-  "coverage": {
-    "thresholds": {
-      "green": 95,
-      "yellow": 80
-    }
-  },
   "tasks": {
     "format": "deno fmt",
     "lint": "deno check --all ./src && deno fmt --check && cd gate && deno check --all",
     "test": "deno test",
     "test-coverage": "deno test --coverage=.coverage",
     "coverage-report": "deno coverage .coverage --html",
-    "coverage-check": "cd gate && ./coverage.ts --require-yellow",
-    "deps": "cd gate && ./deps.ts"
+    "coverage-check": "cd gate && ./coverage.ts 95 ../.coverage/html/index.html"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.17",

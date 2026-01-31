@@ -1,20 +1,13 @@
 #!/usr/bin/env -S deno run --allow-all
 
-import { checkCwd, findRootDir, parseArguments, resolvePath } from './src/common.ts';
+import { parseArgs } from '@std/cli/parse-args';
+import { resolvePath } from './src/common.ts';
 
 /**
  * Gate script for extracting coverage percentage from HTML report.
  *
  * Reads the coverage HTML report and extracts the Lines coverage percentage
  * from the "All files" section.
- *
- * Usage (must be run from ./gate folder):
- *   ./coverage.ts
- *   ./coverage.ts --report=../custom/.coverage/html/index.html
- *   ./coverage.ts --min=80
- *
- * Output:
- *   coverage=97
  *
  * @throws Error if coverage report cannot be read or parsed
  */
@@ -27,48 +20,28 @@ function showHelp(): never {
 Coverage Extractor - Extracts coverage percentage from HTML report
 
 USAGE:
-  ./coverage.ts [OPTIONS]
+  ./coverage.ts [OPTIONS] <min> <report>
 
-OPTIONAL PARAMETERS:
-  --report=<path>    Path to coverage HTML report (default: ../.coverage/html/index.html)
-  --min=<percent>    Minimum required coverage percentage (exits non-zero if below)
+REQUIRED POSITIONAL ARGUMENTS:
+  <min>              Minimum required coverage percentage (0-100, exits non-zero if below)
+  <report>           Path to coverage HTML report (relative or absolute)
 
-FLAGS:
+OPTIONAL FLAGS:
   --help             Show this help message
-  --require-yellow   Exit non-zero if below yellow threshold from deno.json
-  --require-green    Exit non-zero if below green threshold from deno.json
 
 EXAMPLES:
-  # Using deno task
-  deno task coverage
-
-  # Direct execution
-  ./coverage.ts
-
-  # Require minimum coverage
-  ./coverage.ts --min=80
-
-  # Use yellow threshold from deno.json (80%)
-  ./coverage.ts --require-yellow
-
-  # Use green threshold from deno.json (95%)
-  ./coverage.ts --require-green
-
-  # Custom report path
-  ./coverage.ts --report=../custom/.coverage/html/index.html
-
-  # In CI/CD pipelines
-  ./coverage.ts --require-yellow && echo "Coverage passed!"
+  # Require minimum 80% coverage
+  ./coverage.ts 80 ../.coverage/html/index.html
 
 OUTPUT:
-  Prints "coverage=\${percentage}" where percentage is a rounded integer.
-  Exits with code 0 if coverage meets threshold (or no threshold set).
-  Exits with code 1 if coverage is below threshold.
+  Prints "coverage=<percentage>" where percentage is a rounded integer.
+  Exits with code 0 if coverage meets minimum threshold.
+  Exits with code 1 if coverage is below minimum threshold.
 
 NOTES:
-  - This script must be run from the ./gate folder.
-  - Reads thresholds from root deno.json (coverage.thresholds).
-  - Useful for CI/CD pipelines to enforce minimum coverage requirements.
+  - Report path can be relative (from CWD) or absolute
+  - Path must be within the git repository
+  - Useful for CI/CD pipelines to enforce coverage requirements
 `);
   Deno.exit(0);
 }
@@ -122,41 +95,31 @@ function extractCoveragePercentage(html: string): number {
  */
 async function main(): Promise<void> {
   // Parse arguments
-  const { params, flags } = parseArguments(Deno.args);
+  const args = parseArgs(Deno.args, {
+    boolean: ['help'],
+    alias: { h: 'help' },
+  });
 
   // Handle help flag
-  if (flags.has('help')) {
+  if (args.help) {
     showHelp();
   }
 
-  // Check CWD
-  await checkCwd();
-
-  // Determine report path and load thresholds
-  let reportPath: string;
-  let thresholds = { green: 95, yellow: 80 }; // defaults
-
-  const rootDir = await findRootDir();
-
-  if (params.report) {
-    reportPath = resolvePath(params.report);
-  } else {
-    reportPath = `${rootDir}/.coverage/html/index.html`;
+  // Validate positional arguments (args._ contains positional args)
+  if (args._.length < 2) {
+    throw new Error(
+      'Missing required arguments.\nUsage: ./coverage.ts <min> <report>\nRun with --help for more information.',
+    );
   }
 
-  // Load coverage thresholds from deno.json
-  try {
-    const denoJsonPath = `${rootDir}/deno.json`;
-    const denoJson = JSON.parse(await Deno.readTextFile(denoJsonPath));
-    if (denoJson.coverage?.thresholds) {
-      thresholds = {
-        green: denoJson.coverage.thresholds.green ?? 95,
-        yellow: denoJson.coverage.thresholds.yellow ?? 80,
-      };
-    }
-  } catch {
-    // Use defaults if can't read thresholds
+  // Parse minimum threshold (1st positional argument)
+  const minRequired = parseInt(String(args._[0]), 10);
+  if (isNaN(minRequired) || minRequired < 0 || minRequired > 100) {
+    throw new Error(`Invalid <min> argument: ${args._[0]} (must be 0-100)`);
   }
+
+  // Parse report path (2nd positional argument)
+  const reportPath = resolvePath(String(args._[1]));
 
   // Read the HTML report
   let html: string;
@@ -165,7 +128,7 @@ async function main(): Promise<void> {
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) {
       throw new Error(
-        `Coverage report not found: ${reportPath}\nRun tests with coverage first: deno task workflow-test && deno task workflow-coverage-report`,
+        `Coverage report not found: ${reportPath}\nRun tests with coverage first: deno task test-coverage && deno task coverage-report`,
       );
     }
     throw new Error(`Failed to read coverage report: ${error}`);
@@ -178,23 +141,10 @@ async function main(): Promise<void> {
   const roundedCoverage = Math.round(coverage);
   console.log(`coverage=${roundedCoverage}`);
 
-  // Check threshold requirements
-  let minRequired: number | null = null;
-
-  if (params.min) {
-    minRequired = parseInt(params.min, 10);
-    if (isNaN(minRequired) || minRequired < 0 || minRequired > 100) {
-      throw new Error(`Invalid --min value: ${params.min} (must be 0-100)`);
-    }
-  } else if (flags.has('require-green')) {
-    minRequired = thresholds.green;
-  } else if (flags.has('require-yellow')) {
-    minRequired = thresholds.yellow;
-  }
-
-  if (minRequired !== null && roundedCoverage < minRequired) {
+  // Check minimum threshold requirement
+  if (roundedCoverage < minRequired) {
     console.error(
-      `Coverage ${roundedCoverage}% is below required threshold ${minRequired}%`,
+      `Coverage ${roundedCoverage}% is below required minimum ${minRequired}%`,
     );
     Deno.exit(1);
   }
