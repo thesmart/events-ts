@@ -3,7 +3,7 @@
 <!-- BADGES:START -->
 
 [![Tests: passing](static/badge-tests.svg)](https://github.com/thesmart/events-ts/actions/workflows/gate.yml)
-![Coverage: 80](static/badge-coverage.svg) [![License: MIT](static/badge-license.svg)](LICENSE)
+![Coverage: 97](static/badge-coverage.svg) [![License: MIT](static/badge-license.svg)](LICENSE)
 
 <!-- BADGES:END -->
 
